@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Machine Details | Agri_Machine</title>
+  <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+</head>
+
+<body class="bg-green-50 p-6 font-sans">
+
+  <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-green-800 mb-4">{{ machine.machine_name }}</h1>
+
+    <div class="grid grid-cols-2 gap-4 text-gray-700">
+      <p><strong>Machine Number:</strong> {{ machine.machine_number }}</p>
+      <p><strong>Type:</strong> {{ machine.machine_type }}</p>
+      <p><strong>Use:</strong> {{ machine.machine_use }}</p>
+      <p><strong>Crops Supported:</strong> {{ machine.crops_supported }}</p>
+      <p><strong>Price per Day:</strong> ₹{{ machine.price_per_day }}</p>
+      <p><strong>Status:</strong> {{ machine.approval_status }}</p>
+    </div>
+
+    {% if machine.machine_image %}
+      <div class="mt-4">
+        <img src="{{ machine.machine_image.url }}" alt="{{ machine.machine_name }}" class="rounded-lg shadow">
+      </div>
+    {% endif %}
+
+    <div class="mt-6">
+      <a href="{% url 'owner_dashboard' %}" class="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800">
+        ← Back to Dashboard
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>

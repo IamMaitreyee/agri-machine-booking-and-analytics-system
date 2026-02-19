@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Login</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4fdf7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 350px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #2d6a4f;
+    }
+    label {
+      display: block;
+      text-align: left;
+      margin: 8px 0 5px;
+      font-size: 14px;
+      color: #333;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    button {
+      background: #40916c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #2d6a4f;
+    }
+    .login-message {
+      margin-top: 15px;
+      color: red;
+      font-size: 14px;
+    }
+    .login-links {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+    .login-links a {
+      color: #2f8d2f;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .login-links a:hover {
+      text-decoration: underline;
+    }
+    .back-link {
+      display: block;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #357edd;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <h2>Farmer Login</h2>
+    <form method="POST" action="{% url 'farmer_login' %}">
+      {% csrf_token %}
+      <label for="username">Username</label>
+      <input type="text" id="username" name="email" placeholder="Email" required>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="Enter your password" required>
+
+      <button type="submit">Login</button>
+    </form>
+
+    {% if messages %}
+      <div class="login-message">
+        {% for message in messages %}
+          <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="login-links">
+      <p>Don't have an account? <a href="{% url 'farmer_register' %}">Register here</a></p>
+      <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+    </div>
+  </div>
+</body>
+</html>

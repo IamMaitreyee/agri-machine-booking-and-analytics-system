@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Machines</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-green-50 to-green-100 min-h-screen p-8">
+
+  <!-- Success message -->
+  {% if messages %}
+  <div class="max-w-2xl mx-auto my-4">
+    {% for message in messages %}
+    <div class="p-4 mb-3 text-green-800 bg-green-100 border-l-4 border-green-500 rounded">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="flex justify-between items-center max-w-6xl mx-auto mb-6">
+    <h1 class="text-3xl font-bold text-green-700">My Machines</h1>
+    <a href="{% url 'add_machine' %}" class="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 shadow-md">+ Add New</a>
+  </div>
+
+  <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for machine in machines %}
+    <div class="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition duration-300">
+      {% if machine.machine_image %}
+      <img src="{{ machine.machine_image.url }}" class="w-full h-48 object-cover rounded-t-2xl">
+      {% else %}
+      <img src="{% static 'images/default_machine.jpg' %}" class="w-full h-48 object-cover rounded-t-2xl">
+      {% endif %}
+      <div class="p-5">
+        <h2 class="text-xl font-bold text-gray-800">{{ machine.machine_name }}</h2>
+        <p class="text-gray-600">{{ machine.machine_type }}</p>
+        <p class="text-green-700 font-semibold mt-2">₹{{ machine.price_per_day }} / day</p>
+        <p class="text-gray-500 mt-2 text-sm">{{ machine.description|truncatechars:80 }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Update Bank Details</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-8">
+  <div class="max-w-xl mx-auto bg-white p-6 rounded-2xl shadow-lg">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Update Bank Details</h1>
+
+    <form method="post" action="{% url 'update_bank' bank.bank_id %}">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label class="block text-gray-700 mb-2">Bank Name</label>
+        <input type="text" name="bank_name" value="{{ bank.bank_name }}" class="w-full border border-gray-300 rounded-lg p-2" required>
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 mb-2">Account Number</label>
+        <input type="text" name="account_number" value="{{ bank.account_number }}" class="w-full border border-gray-300 rounded-lg p-2" required>
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 mb-2">IFSC Code</label>
+        <input type="text" name="ifsc" value="{{ bank.ifsc_code }}" class="w-full border border-gray-300 rounded-lg p-2" required>
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 mb-2">UPI ID (optional)</label>
+        <input type="text" name="upi_id" value="{{ bank.upi_id }}" class="w-full border border-gray-300 rounded-lg p-2">
+      </div>
+
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Update</button>
+      <a href="{% url 'owner_dashboard' %}" class="ml-4 text-gray-600 hover:underline">Cancel</a>
+    </form>
+  </div>
+</body>
+</html>

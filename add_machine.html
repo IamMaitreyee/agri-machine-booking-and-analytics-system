@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Add Machine - AgriTech</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-jQ7u5k3ebHkV1VjlXgQJSTeJmFYcV1Gfxu0RGsEhjX/w1p3KQ6O3OdD4XEr5OS2+4qympZCqGrtxc8WkZlXnMw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .custom-file-input::-webkit-file-upload-button {
+      visibility: hidden;
+    }
+    .custom-file-input::before {
+      content: 'Upload Image';
+      display: inline-block;
+      background: #e5e7eb;
+      border: 1px solid #d1d5db;
+      border-radius: 0.5rem;
+      padding: 0.5rem 1.25rem;
+      outline: none;
+      white-space: nowrap;
+      cursor: pointer;
+      font-weight: 600;
+      color: #374151;
+    }
+    .custom-file-input:hover::before {
+      border-color: #10b981;
+      background: #d1fae5;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-6">
+  <div class="w-full max-w-3xl bg-white rounded-3xl shadow-2xl transition-all duration-300 hover:shadow-3xl">
+    
+    <div class="bg-gradient-to-r from-emerald-500 to-teal-600 p-8 text-white rounded-t-3xl text-center relative overflow-hidden">
+      <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMDAnIGhlaWdodD0nMTUwJyB2aWV3Qm94PScwIDAgMTAwIDE1MCc+PGcgZmlsbD0nIzAwMDAwMCcgZmlsbC1vcGFjaXR5PScwLjEnPjxwb2x5Z29uIHBvaW50cz0nMCAwIDUwIDUwIDAgMTAwJy8+PC9nPjwvc3ZnPg==')] bg-repeat"></div>
+      
+      <i class="fa fa-tractor text-5xl mb-3 text-white"></i>
+      <h1 class="text-4xl font-extrabold tracking-tight">List Your Farm Machine</h1>
+      <p class="mt-2 text-emerald-100 font-medium">Elevate your equipment rental profile. All fields marked <span class="text-red-300">*</span> are mandatory.</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="p-10 space-y-8">
+      {% csrf_token %}
+
+      <h2 class="text-2xl font-semibold text-gray-800 border-b pb-2 mb-6 border-teal-100">Machine Identification</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-7">
+        
+        <div>
+          <label for="machine_name" class="block text-sm font-semibold text-gray-700 mb-2">Machine Name <span class="text-red-500">*</span></label>
+          <div class="relative shadow-sm">
+            <input type="text" id="machine_name" name="machine_name" class="w-full border border-gray-300 rounded-xl p-3 pl-12 shadow-inner bg-gray-50 focus:ring-4 focus:ring-teal-200 focus:border-teal-500 transition duration-150" placeholder="e.g., John Deere 5075E" required>
+            <i class="fa fa-cogs absolute left-4 top-1/2 -translate-y-1/2 text-teal-500"></i>
+          </div>
+        </div>
+
+        <div>
+          <label for="machine_number" class="block text-sm font-semibold text-gray-700 mb-2">Machine Number (Serial/License) <span class="text-red-500">*</span></label>
+          <div class="relative shadow-sm">
+            <input type="text" id="machine_number" name="machine_number" class="w-full border border-gray-300 rounded-xl p-3 pl-12 shadow-inner bg-gray-50 focus:ring-4 focus:ring-teal-200 focus:border-teal-500 transition duration-150" placeholder="e.g., HR-45G-1234 (Unique ID)" required>
+            <i class="fa fa-hashtag absolute left-4 top-1/2 -translate-y-1/2 text-teal-500"></i>
+          </div>
+        </div>
+
+        <div>
+          <label for="machine_type" class="block text-sm font-semibold text-gray-700 mb-2">Machine Type <span class="text-red-500">*</span></label>
+          <input type="text" id="machine_type" name="machine_type" class="w-full border border-gray-300 rounded-xl p-3 shadow-inner bg-gray-50 focus:ring-4 focus:ring-teal-200 focus:border-teal-500 transition duration-150" placeholder="e.g., Utility Tractor, Combine Harvester" required>
+        </div>
+
+        <div>
+          <label for="price_per_day" class="block text-sm font-semibold text-gray-700 mb-2">Price per Day (₹) <span class="text-red-500">*</span></label>
+          <div class="relative shadow-sm">
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₹</span>
+            <input type="number" id="price_per_day" name="price_per_day" min="0" step="10" class="w-full border border-gray-300 rounded-xl p-3 pl-10 shadow-inner bg-gray-50 focus:ring-4 focus:ring-teal-200 focus:border-teal-500 transition duration-150" placeholder="e.g., 5000" required>
+          </div>
+        </div>
+      </div>
+
+      ---
+
+      <h2 class="text-2xl font-semibold text-gray-800 border-b pb-2 mb-6 border-teal-100 pt-4">Functionality & Capacity</h2>
+      
+      <div>
+        <label for="machine_use" class="block text-sm font-semibold text-gray-700 mb-2">Primary Use/Function <span class="text-red-500">*</span></label>
+        <textarea id="machine_use" name="machine_use" rows="3" class="w-full border border-gray-300 rounded-xl p-4 shadow-inner bg-gray-50 focus:ring-4 focus:ring-teal-200 focus:border-teal-500 transition duration-150" placeholder="e.g., Deep tilling, planting corn, or harvesting paddy. Mention HP/capacity." required></textarea>
+      </div>
+
+      <div>
+        <label for="crops_supported" class="block text-sm font-semibold text-gray-700 mb-2">Crops Supported</label>
+        <textarea id="crops_supported" name="crops_supported" rows="2" class="w-full border border-gray-300 rounded-xl p-4 shadow-inner bg-gray-50 focus:ring-4 focus:ring-teal-200 focus:border-teal-500 transition duration-150" placeholder="e.g., Wheat, Rice (Paddy), Sugarcane, Maize, Cotton."></textarea>
+      </div>
+
+      <div>
+        <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">Full Description (Features/Conditions)</label>
+        <textarea id="description" name="description" rows="3" class="w-full border border-gray-300 rounded-xl p-4 shadow-inner bg-gray-50 focus:ring-4 focus:ring-teal-200 focus:border-teal-500 transition duration-150" placeholder="Provide extra details like condition (New/Old), model year, fuel type, and specific features (e.g., GPS-enabled)."></textarea>
+      </div>
+
+      ---
+
+      <h2 class="text-2xl font-semibold text-gray-800 border-b pb-2 mb-6 border-teal-100 pt-4">Machine Visuals</h2>
+      <div>
+        <label for="machine_image" class="block text-sm font-semibold text-gray-700 mb-2">Machine Image (Best Quality)</label>
+        <input type="file" id="machine_image" name="machine_image" class="w-full text-gray-600 rounded-xl border border-gray-300 p-3 bg-white custom-file-input" accept="image/*">
+        <p class="text-xs text-gray-500 mt-1 flex items-center"><i class="fa fa-info-circle mr-1"></i> Clear, well-lit photos increase booking probability by 40%.</p>
+      </div>
+
+      <div class="flex justify-end gap-5 pt-6 border-t mt-8">
+        
+        <a href="{% url 'owner_dashboard' %}" class="px-8 py-3 rounded-full border-2 border-gray-300 hover:bg-gray-100 text-gray-700 font-semibold transition duration-200 ease-in-out shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-gray-400">
+          <i class="fa fa-times-circle mr-2"></i> Cancel
+        </a>
+        
+        <button type="submit" class="px-8 py-3 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold shadow-lg shadow-teal-300/50 hover:from-emerald-600 hover:to-teal-700 transform hover:scale-[1.02] transition duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-teal-400 focus:ring-opacity-50">
+          <i class="fa fa-check-circle mr-2"></i> Save Machine
+        </button>
+        <a href="{% url 'machine_list' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg shadow-md transition">Cancel</a>
+
+      </div>
+    </form>
+  </div>
+</body>
+</html>

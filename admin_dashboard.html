@@ -1,0 +1,212 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agri-Tech Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: 'Segoe UI', sans-serif; background-color: #f8fafc; }
+.card { background-color: white; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.sidebar { width: 250px; background-color: #0c4a6e; color: #e0f2fe; position: fixed; height: 100%; top: 0; left: 0; padding: 1.5rem; transition: all 0.3s; transform: translateX(-100%); z-index: 50; }
+.sidebar.active { transform: translateX(0); }
+.main-content { margin-left: 0; transition: margin-left 0.3s; }
+.main-content.shifted { margin-left: 250px; }
+.nav-link { display: flex; align-items: center; padding: 0.6rem 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; transition: background-color 0.2s; }
+.nav-link:hover, .nav-link.active { background-color: #1a567c; }
+.hamburger-menu { position: fixed; top: 1rem; left: 1rem; z-index: 60; background-color: white; padding: 0.5rem; border-radius: 0.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+@media (min-width: 1024px) { .sidebar { transform: translateX(0); } .main-content { margin-left: 250px; } .hamburger-menu { display: none; } }
+canvas { height: 250px; }
+</style>
+</head>
+<body class="flex bg-gray-50">
+
+<!-- Safe JSON for charts -->
+{{ chartDataJSON|json_script:"chartDataJSON" }}
+
+<!-- Hamburger -->
+<button id="menu-toggle" class="lg:hidden hamburger-menu">☰</button>
+
+<!-- Sidebar -->
+<aside id="sidebar" class="sidebar">
+<h1 class="text-xl font-bold mb-8 flex items-center">🌱 <span class="ml-2">Agri-Tech</span></h1>
+<nav>
+<a href="#dashboard" class="nav-link active" data-view="dashboard">📊 Dashboard</a>
+<a href="#users" class="nav-link" data-view="users">👥 User Management</a>
+<a href="#machines" class="nav-link" data-view="machines">🚜 Machine Management</a>
+<a href="#bookings" class="nav-link" data-view="bookings">📅 Booking Management</a>
+<form method="POST" action="{% url 'logout' %}">{% csrf_token %}
+<button type="submit" class="nav-link mt-6 bg-red-700 hover:bg-red-800">🚪 Logout</button>
+</form>
+</nav>
+</aside>
+
+<!-- Main Content -->
+<main id="main-content" class="main-content flex-1 p-4 lg:p-8">
+<header class="flex justify-between items-center mb-8">
+<h2 id="pageTitle" class="text-2xl font-bold text-gray-800">Dashboard</h2>
+<span class="hidden md:block text-gray-700">👤 Welcome, {{ request.user.username }}</span>
+</header>
+
+<!-- Dashboard View -->
+<div id="dashboardView" class="view-content space-y-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="p-6 card text-center">
+<h3 class="text-3xl font-bold">{{ summary.totalUsers }}</h3>
+<p class="text-sm text-gray-600">Total Users</p>
+</div>
+<div class="p-6 card text-center">
+<h3 class="text-3xl font-bold">{{ summary.totalMachines }}</h3>
+<p class="text-sm text-gray-600">Total Machines</p>
+</div>
+<div class="p-6 card text-center">
+<h3 class="text-3xl font-bold">{{ summary.activeBookings }}</h3>
+<p class="text-sm text-gray-600">Active Bookings</p>
+</div>
+<div class="p-6 card text-center bg-yellow-50 border">
+<h3 class="text-3xl font-bold">{{ summary.pendingApprovals }}</h3>
+<p class="text-sm text-yellow-700">Pending Approvals</p>
+</div>
+</div>
+
+<!-- Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="p-6 card">
+<h3 class="text-lg font-semibold mb-4">Bookings by Month</h3>
+<canvas id="bookingsChart"></canvas>
+</div>
+<div class="p-6 card">
+<h3 class="text-lg font-semibold mb-4">Machines by Type</h3>
+<canvas id="machineChart"></canvas>
+</div>
+</div>
+</div>
+
+<!-- Users View -->
+<div id="usersView" class="view-content hidden">
+<h2 class="text-xl font-bold mb-4">User Management</h2>
+<div class="p-6 card overflow-x-auto">
+<table class="w-full text-sm text-gray-600">
+<thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+<tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th></tr>
+</thead>
+<tbody>
+{% for u in users %}
+<tr>
+<td>{{ u.farmer_id }}</td>
+<td>{{ u.name }}</td>
+<td>{{ u.email }}</td>
+<td>{{ u.phone }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Machines View -->
+<div id="machinesView" class="view-content hidden">
+<h2 class="text-xl font-bold mb-4">Machine Management</h2>
+<div class="p-6 card overflow-x-auto">
+<table class="w-full text-sm text-gray-600">
+<thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+<tr>
+<th>Name</th><th>Owner</th><th>Type</th><th>Price/day</th><th>Status</th><th>Action</th>
+</tr>
+</thead>
+<tbody>
+{% for m in machines %}
+<tr class="{% if m.approval_status == 'pending' %}bg-yellow-50{% elif m.approval_status == 'approved' %}bg-green-50{% elif m.approval_status == 'rejected' %}bg-red-50{% endif %}">
+<td>{{ m.machine_name }}</td>
+<td>{{ m.owner.name }}</td>
+<td>{{ m.machine_type }}</td>
+<td>{{ m.price_per_day }}</td>
+<td class="capitalize font-medium">{{ m.approval_status }}</td>
+<td>
+{% if m.approval_status == 'pending' %}
+<a href="{% url 'approve_machine' m.machine_id %}" class="px-3 py-1 text-white bg-green-600 rounded hover:bg-green-700 mr-1">Approve</a>
+<a href="{% url 'reject_machine' m.machine_id %}" class="px-3 py-1 text-white bg-red-600 rounded hover:bg-red-700">Reject</a>
+{% else %}
+<span class="text-gray-500">-</span>
+{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+<!-- Bookings View -->
+<div id="bookingsView" class="view-content hidden">
+<h2 class="text-xl font-bold mb-4">Booking Management</h2>
+<div class="p-6 card overflow-x-auto">
+<table class="w-full text-sm text-gray-600">
+<thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+<tr><th>ID</th><th>Machine</th><th>Farmer</th><th>Start</th><th>End</th><th>Status</th></tr>
+</thead>
+<tbody>
+{% for b in bookings %}
+<tr>
+<td>{{ b.booking_id }}</td>
+<td>{{ b.machine.machine_name }}</td>
+<td>{{ b.farmer.name }}</td>
+<td>{{ b.start_date }}</td>
+<td>{{ b.end_date }}</td>
+<td>{{ b.status }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+
+</main>
+
+<script>
+const views = {
+  dashboard: document.getElementById('dashboardView'),
+  users: document.getElementById('usersView'),
+  machines: document.getElementById('machinesView'),
+  bookings: document.getElementById('bookingsView')
+};
+const navLinks = document.querySelectorAll('.nav-link[data-view]');
+const sidebar = document.getElementById('sidebar');
+const menuToggle = document.getElementById('menu-toggle');
+const pageTitle = document.getElementById('pageTitle');
+
+menuToggle.addEventListener('click', () => sidebar.classList.toggle('active'));
+navLinks.forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const view = link.dataset.view;
+    Object.values(views).forEach(v => v.classList.add('hidden'));
+    views[view].classList.remove('hidden');
+    navLinks.forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+    pageTitle.textContent = view === 'dashboard' ? 'Dashboard' : view.charAt(0).toUpperCase() + view.slice(1) + ' Management';
+  });
+});
+
+let dashboardData = {};
+try { dashboardData = JSON.parse(document.getElementById('chartDataJSON').textContent); } 
+catch(e) { console.warn("Chart data missing or invalid", e); }
+
+function renderChart(id, type, dataset, colors) {
+  if (!dataset || !dataset.labels || !dataset.data) return;
+  const ctx = document.getElementById(id).getContext('2d');
+  new Chart(ctx, {
+    type,
+    data: { labels: dataset.labels, datasets: [{ data: dataset.data, backgroundColor: colors, borderWidth: 1 }] },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+}
+
+renderChart('bookingsChart', 'bar', dashboardData.bookings, ['#22c55e', '#3b82f6', '#f59e0b']);
+renderChart('machineChart', 'doughnut', dashboardData.machines, ['#22c55e', '#ef4444', '#f59e0b', '#3b82f6']);
+</script>
+
+</body>
+</html>

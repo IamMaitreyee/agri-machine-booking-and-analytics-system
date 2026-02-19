@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Owner Registration</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4fdf7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .register-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.8rem;
+      font-weight: bold;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-top: 0.75rem;
+      margin-bottom: 0.25rem;
+      font-size: 0.95rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      padding: 0.9rem;
+      margin-top: 1rem;
+      background: #2f8d2f;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover {
+      background: #267626;
+    }
+    .links {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+    .links a {
+      color: #2f8d2f;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .links a:hover {
+      text-decoration: underline;
+    }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      color: #357edd;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .message {
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      text-align: center;
+      font-weight: 600;
+    }
+    .message.success { background-color: #d1fae5; color: #065f46; }
+    .message.error { background-color: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <div class="register-box">
+    <h2>Owner Registration</h2>
+
+    <!-- Django messages -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="message {{ message.tags }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'owner_register' %}">
+      {% csrf_token %}
+      <label for="name">Full Name</label>
+      <input type="text" name="name" id="name" placeholder="Enter full name" required />
+
+      <label for="email">Email Address</label>
+      <input type="email" name="email" id="email" placeholder="owner@example.com" required />
+
+      <label for="phone">Phone Number</label>
+      <input type="tel" name="phone" id="phone" placeholder="Enter phone number" required />
+
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" placeholder="Enter password" required />
+
+      <button type="submit">Register</button>
+    </form>
+
+    <div class="links">
+      Already have an account? <a href="{% url 'owner_login' %}">Log In</a>
+    </div>
+    <a href="{% url 'home' %}" class="back-link">← Back to Welcome</a>
+  </div>
+</body>
+</html>

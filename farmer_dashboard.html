@@ -1,0 +1,672 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Farmer Dashboard | Agri_Machine</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --green-600: #16a34a;
+      --muted: #6b7280;
+      --card-bg: #ffffff;
+      --page-bg: #f8fff7;
+    }
+
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background: var(--page-bg);
+      color: #0f172a;
+      margin: 0;
+      padding: 0;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(2, 6, 23, 0.06);
+      transition: transform .22s ease;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+    }
+
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, #064e3b, #065f46);
+      color: #ecfccb;
+      position: fixed;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 40;
+    }
+
+    .sidebar a {
+      color: inherit;
+      text-decoration: none;
+      display: block;
+      padding: 10px 12px;
+      border-radius: 10px;
+    }
+
+    .sidebar a.active,
+    .sidebar a:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    main {
+      margin-left: 280px;
+      padding: 28px;
+    }
+
+    .grid-cols-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .stat {
+      padding: 18px;
+      text-align: center;
+    }
+
+    .stat .num {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--green-600);
+      transition: all 1s ease;
+    }
+
+    .tab-btn {
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: transparent;
+      border: 1px solid rgba(15, 23, 42, 0.04);
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    thead th {
+      font-size: 0.8rem;
+      color: #064e3b;
+      background: #ecfdf5;
+      text-transform: uppercase;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+
+    .badge.green {
+      background: #ecfdf5;
+      color: #166534;
+    }
+
+    .badge.yellow {
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .badge.red {
+      background: #fff1f2;
+      color: #9f1239;
+    }
+
+    @media(max-width:1024px) {
+      main {
+        margin-left: 0;
+        padding: 18px;
+      }
+
+      .sidebar {
+        position: fixed;
+        transform: translateX(-110%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .mobile-menu {
+        display: inline-block;
+      }
+    }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      z-index: 60;
+      top: 18px;
+      left: 18px;
+      background: white;
+      padding: 8px 10px;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(2, 6, 23, .08);
+    }
+
+    img.round {
+      border-radius: 999px;
+    }
+
+    .machine-card img {
+      height: 170px;
+      width: 100%;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    /* Toast for Booking Confirmation */
+    #toast {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      background: #16a34a;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+
+<body>
+  <button id="mobileToggle" class="mobile-menu">☰</button>
+
+  <aside id="sidebar" class="sidebar" aria-label="Sidebar">
+    <div>
+      <div class="flex items-center gap-2.5 mb-2">
+        <div class="text-2xl">🌾</div>
+        <div class="font-extrabold text-base">Agri_Machine</div>
+      </div>
+      <div class="text-xs text-opacity-90">{{ farmer.name }}</div>
+    </div>
+
+    <nav class="mt-3.5">
+      <a href="#" class="nav-link active" data-view="dashboard">📊 Dashboard</a>
+      <a href="#" class="nav-link" data-view="machines">🚜 Available Machines</a>
+      <a href="#" class="nav-link" data-view="bookings">📅 My Bookings</a>
+      <a href="#" class="nav-link" data-view="payments">💳 Payments</a>
+
+      <div class="mt-4.5">
+        <form method="POST" action="{% url 'farmer_logout' %}">{% csrf_token %}
+          <button type="submit"
+            class="w-full p-2.5 rounded-lg bg-red-800 text-white font-bold border-none">Logout</button>
+        </form>
+      </div>
+    </nav>
+  </aside>
+
+  <main>
+    <header class="flex justify-between items-center gap-4.5 mb-4.5">
+      <div>
+        <div class="font-bold text-lg">Farmer Dashboard</div>
+        <div class="text-sm text-gray-500">Welcome back, <strong>{{ farmer.name }}</strong></div>
+      </div>
+    </header>
+
+    <section id="dashboardView" class="mb-6">
+      <div class="grid-cols-4">
+        <div class="card stat">
+          <div class="text-sm text-gray-500">Available Machines</div>
+          <div class="num" data-count="{{ summary.total_available_machines }}">0</div>
+        </div>
+        <div class="card stat">
+          <div class="text-sm text-gray-500">My Bookings</div>
+          <div class="num" data-count="{{ summary.total_bookings }}">0</div>
+        </div>
+        <div class="card stat">
+          <div class="text-sm text-gray-500">Active Bookings</div>
+          <div class="num" data-count="{{ summary.active_bookings }}">0</div>
+        </div>
+        <div class="card stat">
+          <div class="text-sm text-gray-500">Total Spent</div>
+          <div class="num" data-count="{{ summary.total_spent }}">0</div>
+        </div>
+      </div>
+
+      <div class="mt-4.5 grid grid-cols-2 gap-4">
+        <div class="card p-4">
+          <div class="font-bold text-green-900 mb-3">Monthly Spend (₹)</div>
+          <canvas id="spendChart" height="220"></canvas>
+        </div>
+        <div class="card p-4">
+          <div class="font-bold text-green-900 mb-3">Booking Status</div>
+          <canvas id="statusChart" height="220"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section id="machinesView" class="hidden">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="font-extrabold">Available Machines</h3>
+        <div class="flex gap-2">
+          <input id="machineSearch" type="search" placeholder="Search machine..."
+            class="p-2 rounded-lg border border-gray-200">
+          <select id="typeFilter" class="p-2 rounded-lg border border-gray-200">
+            <option value="">All types</option>
+            <option value="Tillage">Tillage</option>
+            <option value="Planting">Planting</option>
+            <option value="Harvesting">Harvesting</option>
+            <option value="Pest Control">Pest Control</option>
+          </select>
+          <button id="resetFilter" class="tab-btn bg-gray-700 text-white hover:bg-gray-800">Reset</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
+        {% for m in machines %}
+        <div class="card machine-card">
+          <img
+            src="{% if m.machine_image %}{{ m.machine_image }}{% else %}{% static 'images/machine_placeholder.jpg' %}{% endif %}"
+            alt="{{ m.machine_name }}">
+          <div class="p-3">
+            <div class="flex justify-between items-start">
+              <div>
+                <div class="font-bold text-base">{{ m.machine_name }}</div>
+                <div class="text-gray-500 text-sm">{{ m.machine_use }}</div>
+              </div>
+              <div class="text-right">
+                <div class="font-extrabold text-green-600">₹{{ m.price_per_day }}/day</div>
+                <div class="text-gray-500 text-xs">{{ m.machine_type }}</div>
+              </div>
+            </div>
+
+            <div class="mt-2 flex gap-2">
+              <button onclick="openBookingModal('{{ m.machine_id|default:0|escapejs }}')"
+                class="tab-btn bg-green-600 text-white">Book Now</button>
+              {% if m.owner %}
+              <button onclick="showOwner('{{ m.owner.owner_id|escapejs }}')" class="tab-btn">Owner</button>
+              {% else %}
+              <button disabled class="tab-btn opacity-50 cursor-not-allowed">No Owner</button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="card p-4">No approved machines available right now.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section id="bookingsView" class="hidden">
+      <h3 class="font-extrabold mb-3">My Bookings</h3>
+      <div class="card p-3 overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Machine</th>
+              <th>Owner</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Payment</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+            <tr class="border-b border-gray-200">
+              <td>{{ b.booking_id }}</td>
+              <td>{{ b.machine.machine_name }}</td>
+              <td>{{ b.owner.name }}</td>
+              <td>{{ b.start_date }}</td>
+              <td>{{ b.end_date }}</td>
+              <td>₹{{ b.total_price }}</td>
+              <td>
+                <span class="badge 
+              {% if b.status == 'completed' %}green
+              {% elif b.status == 'pending' %}yellow
+              {% else %}red{% endif %}">
+                  {{ b.status|capfirst }}
+                </span>
+              </td>
+
+              <td>
+                {% with payment=b.payment_set.first %}
+                {% if payment %}
+                {% if payment.payment_status == 'completed' %}
+                <span class="text-green-600 font-semibold">Paid</span>
+                {% elif payment.payment_status == 'pending' %}
+                <span class="text-yellow-500 font-semibold">Cash Pending</span>
+                {% else %}
+                <span class="text-red-500 font-semibold">{{ payment.payment_status|capfirst }}</span>
+                {% endif %}
+                {% else %}
+                <a href="{% url 'make_payment' b.booking_id %}" class="text-blue-600 underline">Make Payment</a>
+                {% endif %}
+                {% endwith %}
+              </td>
+
+              <td>
+                {% if b.status != 'cancelled' %}
+                <button class="tab-btn bg-red-600 text-white text-xs"
+                  onclick="cancelBooking('{{ b.booking_id }}', this)">Cancel</button>
+                {% else %}
+                Cancelled
+                {% endif %}
+              </td>
+
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="9" class="text-center py-4 text-gray-500">No bookings found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-500 text-white px-4 py-2 rounded shadow-lg"
+      style="display:none;"></div>
+
+    <script>
+      function cancelBooking(id, btn) {
+        if (!confirm("Are you sure you want to cancel this booking?")) return;
+        fetch(`/cancel-booking/${id}/`, { 
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              btn.closest('td').textContent = 'Cancelled';
+              const toast = document.getElementById('toast');
+              toast.textContent = 'Booking Cancelled!';
+              toast.style.display = 'block';
+              setTimeout(() => { toast.style.display = 'none'; }, 3000);
+            }
+          });
+      }
+    </script>
+
+    <section id="paymentsView" class="hidden">
+      <h3 class="font-extrabold mb-3">Payments</h3>
+      <div class="card p-3 overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-600">
+          <thead class="bg-gray-100 text-xs uppercase text-gray-700">
+            <tr>
+              <th>ID</th>
+              <th>Booking</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in payments %}
+            <tr class="border-b border-gray-200 hover:bg-gray-50">
+              <td>{{ p.payment_id }}</td>
+              <td>{{ p.booking.booking_id }}</td>
+              <td>₹{{ p.amount }}</td>
+              <td>{{ p.payment_date|date:"Y-m-d" }}</td>
+              <td>{{ p.payment_method|upper }}</td>
+
+              <td>
+                <span class="badge px-2 py-1 rounded text-white
+              {% if p.payment_status == 'completed' %}bg-green-600
+              {% elif p.payment_status == 'pending' %}bg-yellow-500
+              {% else %}bg-red-600{% endif %}">
+                  {{ p.payment_status|capfirst }}
+                </span>
+              </td>
+
+              <td>
+                {% if p.payment_method == 'CASH' and p.payment_status == 'pending' %}
+                <form method="POST" action="{% url 'confirm_cash_payment' p.payment_id %}">
+                  {% csrf_token %}
+                  <button type="submit" class="px-2 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+                    Mark as Paid
+                  </button>
+                </form>
+                {% elif p.payment_method != 'CASH' %}
+                <div class="text-xs text-gray-700 space-y-1">
+                  <div><strong>Owner:</strong> {{ p.booking.owner.name }}</div>
+                  <div><strong>Phone:</strong> {{ p.booking.owner.phone|default:"N/A" }}</div>
+                  
+                  {% for bank_detail in p.booking.owner.ownerbankdetails_set.all %}
+                  <div><strong>Bank A/C:</strong> {{ bank_detail.account_number }}</div>
+                  <div><strong>IFSC:</strong> {{ bank_detail.ifsc_code }}</div>
+                  <div><strong>UPI:</strong> {{ bank_detail.upi_id|default:"N/A" }}</div>
+                  {% endfor %}
+                  
+                </div>
+                {% else %}
+                ---
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="text-center py-4 text-gray-500">No payments found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <div id="bookingModal" class="hidden fixed inset-0 flex items-center justify-center z-50">
+      <div class="absolute inset-0 bg-black/50" onclick="closeBookingModal()"></div>
+      <div class="bg-white rounded-xl p-5 relative z-10 w-full max-w-md card" onclick="event.stopPropagation()">
+        <h4 class="font-bold text-lg mb-3">Book Machine</h4>
+        <form id="bookingForm" method="POST" action="{% url 'create_booking' %}">
+          {% csrf_token %}
+          <input type="hidden" name="machine_id" id="form_machine_id">
+          <div class="flex gap-3 mb-4">
+            <input name="start_date" type="date" required class="flex-1 p-2 border border-gray-200 rounded-lg">
+            <input name="end_date" type="date" required class="flex-1 p-2 border border-gray-200 rounded-lg">
+          </div>
+          <div class="flex justify-end gap-2">
+            <button type="button" onclick="closeBookingModal()" class="tab-btn">Cancel</button>
+            <button type="submit" class="tab-btn bg-green-600 text-white">Confirm</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="ownerPopup" class="hidden fixed inset-0 flex items-center justify-center z-50">
+      <div class="absolute inset-0 bg-black/50" onclick="closeOwnerPopup()"></div>
+      <div class="bg-white rounded-xl p-5 relative z-10 w-full max-w-sm card" onclick="event.stopPropagation()">
+        <h4 class="font-bold text-lg mb-2">Owner Details</h4>
+        <div id="ownerContent" class="text-gray-700"></div>
+        <div class="mt-4 text-right">
+          <button onclick="closeOwnerPopup()" class="tab-btn">Close</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast">Booking Confirmed!</div>
+
+  {{ chartData|json_script:"chartData" }}
+  {{ owners|json_script:"ownersJSON" }}
+  {{ booking_stats|json_script:"bookingStats" }}
+
+  <script>
+    // Sidebar toggle
+    const mobileToggle = document.getElementById('mobileToggle');
+    const sidebar = document.getElementById('sidebar');
+    mobileToggle && mobileToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+    // Navigation
+    const navLinks = document.querySelectorAll('.nav-link');
+    const views = {
+      'dashboard': document.getElementById('dashboardView'),
+      'machines': document.getElementById('machinesView'),
+      'bookings': document.getElementById('bookingsView'),
+      'payments': document.getElementById('paymentsView')
+    };
+    
+    // --- Data Loading ---
+    let chartData = {};
+    try { 
+        chartData = JSON.parse(document.getElementById('chartData')?.textContent || '{}'); 
+    } catch (e) { 
+        console.error("Error parsing chartData:", e); 
+    }
+
+    // --- Chart Rendering Function ---
+    function renderCharts() {
+      // 1. Spend Chart (Line Chart)
+      const spendCtx = document.getElementById('spendChart')?.getContext('2d');
+      if (spendCtx) {
+        if (window.spendChartInstance) {
+            window.spendChartInstance.destroy();
+        }
+
+        window.spendChartInstance = new Chart(spendCtx, {
+          type: 'line',
+          data: {
+            labels: chartData.spend?.labels || [], 
+            datasets: [{
+              label: 'Monthly Spend',
+              data: chartData.spend?.data || [],
+              borderColor: '#16a34a',
+              backgroundColor: '#16a34a33',
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }, scales: {y: {beginAtZero: true}} }
+        });
+      }
+
+      // 2. Status Chart (Doughnut Chart)
+      const statusCtx = document.getElementById('statusChart')?.getContext('2d');
+      if (statusCtx) {
+        if (window.statusChartInstance) {
+            window.statusChartInstance.destroy();
+        }
+
+        window.statusChartInstance = new Chart(statusCtx, {
+          type: 'doughnut',
+          data: {
+            labels: chartData.status?.labels || [], 
+            datasets: [{
+              data: chartData.status?.data || [],
+              backgroundColor: ['#16a34a', '#facc15', '#ef4444']
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+      }
+    }
+
+
+    navLinks.forEach(a => {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        navLinks.forEach(x => x.classList.remove('active'));
+        this.classList.add('active');
+        Object.values(views).forEach(v => v.classList.add('hidden'));
+        const view = this.dataset.view || 'dashboard';
+        views[view].classList.remove('hidden');
+        sidebar.classList.remove('open');
+        
+        // Re-render charts when switching to dashboard view
+        if (view === 'dashboard') {
+            setTimeout(renderCharts, 50); 
+        }
+      });
+    });
+
+    // Animated stats
+    function animateStats() {
+      document.querySelectorAll('.stat .num').forEach(el => {
+        const target = +el.dataset.count || 0;
+        let count = 0;
+        const step = Math.ceil(target / 100);
+        const interval = setInterval(() => {
+          count += step;
+          if (count >= target) { count = target; clearInterval(interval); }
+          el.textContent = count;
+        }, 10);
+      });
+    }
+
+    // Booking modal
+    function openBookingModal(machineId) {
+      const modal = document.getElementById('bookingModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      document.getElementById('form_machine_id').value = machineId;
+    }
+    function closeBookingModal() { document.getElementById('bookingModal').classList.add('hidden'); }
+
+    // Owner popup
+    let owners = [];
+    try { owners = JSON.parse(document.getElementById('ownersJSON')?.textContent || '[]'); } catch (e) { owners = []; }
+    function showOwner(ownerId) {
+      const o = owners.find(x => x.owner_id == ownerId); if (!o) return;
+      const content = document.getElementById('ownerContent');
+      content.innerHTML = `
+        <div class="font-semibold">${o.name || ''}</div>
+        <div><a href="mailto:${o.email || ''}" class="text-blue-600">${o.email || ''}</a></div>
+        <div>📞 <a href="tel:${o.phone || ''}" class="text-blue-600">${o.phone || ''}</a></div> 
+        <div>🏠 ${o.address || ''}</div>
+      `;
+      document.getElementById('ownerPopup').classList.remove('hidden');
+    }
+    function closeOwnerPopup() { document.getElementById('ownerPopup').classList.add('hidden'); }
+
+    // Machine search & filter
+    const machineCards = document.querySelectorAll('.machine-card');
+    const searchInput = document.getElementById('machineSearch');
+    const typeSelect = document.getElementById('typeFilter');
+    const resetFilter = document.getElementById('resetFilter');
+    function filterMachines() {
+      const s = searchInput.value.toLowerCase();
+      const t = typeSelect.value;
+      machineCards.forEach(card => {
+        const name = card.querySelector('.font-bold')?.textContent.toLowerCase() || '';
+        const type = card.querySelector('.text-gray-500.text-xs')?.textContent || '';
+        card.style.display = (name.includes(s) && (t == '' || type == t)) ? 'block' : 'none';
+      });
+    }
+    searchInput.addEventListener('input', filterMachines);
+    typeSelect.addEventListener('change', filterMachines);
+    resetFilter.addEventListener('click', () => { searchInput.value = ''; typeSelect.value = ''; filterMachines(); });
+
+    const bookingForm = document.getElementById('bookingForm');
+    bookingForm?.addEventListener('submit', (e) => {
+      const toast = document.getElementById('toast');
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    });
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelector('.nav-link[data-view="dashboard"]').click(); 
+        animateStats();
+    });
+  </script>
+</body>
+
+</html>
